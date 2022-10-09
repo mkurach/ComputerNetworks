@@ -1,0 +1,69 @@
+****INSTRUKCJA DO SKRYPTU PROJEKT1.SH****
+
+*CO ROBI SKRYPT*
+Skrypt ma na celu sprawdzać parametry komputera, takie jak: adres IP, ilość używanej pamięci RAM oraz ilość procesorów. Powyższe dane będzie wysyłał na mejla, jeśli skrypt jest uruchamiany po raz pierwszy lub sprawdzał czy się zmieniły, jeśli skrypt jest uruchamiany po raz kolejny (i wysyłał zauktualizowane).
+
+*BIBLIOTEKA SSMTP*
+Uprzednio należy zainstalować bibliotekę ssmtp, która jest wykorzystywana do wysyłania mejli. Należy wpisać w swojej konsoli komendę:
+sudo apt install ssmtp
+
+*KONFIGURACJA PLIKU SSMTP.CONF*
+Aby skrypt wysyłał poprawnie mejle, należy odpowiednio skonfigurowac plik ssmtp.conf. W tym celu należy wykonać poniższe komendy: (#oznacza komentarz do komendy)
+cd /etc #przechodzimy do folderu etc
+sudo su #folder ssmtp wymaga uprawnieć roota, aby go modyfikować
+cd ssmtp #wchodzimy do folderu w którym znajduje się ssmtp
+nano ssmtp.conf #otwieramy plik edytorem tekstowym
+
+Zawartosc pliku ssmtp.conf powinna być zmieniona na następującą:
+
+#
+# Config file for sSMTP sendmail
+#
+# The person who gets all mail for userids < 1000
+# Make this empty to disable rewriting.
+SERVER=XXXXX@gmail.com
+
+# The place where the mail goes. The actual machine name is required no
+# MX records are consulted. Commonly mailhosts are named mail.domain.com
+mailhub=smtp.gmail.com:587
+AuthUser=XXXXX@gmail.com
+AuthPass=YYYYYY
+UseTLS=YES
+UseSTARTTLS=YES
+
+# Where will the mail seem to come from?
+rewriteDomain=gmail.com
+
+# The full hostname
+hostname=DESKTOP-IHOACRJ.localdomain
+
+# Are users allowed to set their own From: address?
+# YES - Allow the user to specify their own From: address
+# NO - Use the system generated From: address
+FromLineOverride=YES
+
+W miejscu XXXX wpisujemy swój adres emajl, z którego mają być wysyłane mejle, w YYYYY podajemy do niego hasło. Powyższa treść pliku jest dostosowana do wysyłania mejli z konta gmail, jesli będziemy używać innej poczty należy zmienić odpowiednio zmienne SERVER, mailhub, rewriteDomain.
+Ponadto konta gmail mają wysoki poziom sprawdzania autoryzacji, w ustawieniach swojego konta gmail należy w ustawieniach pozwolić na dostęp do konta niezaufanym aplikacjom. 
+Warto dla tego skryptu stworzyć oddzielne konto, które będzie służyło tylko do tego lub użyć konta z innej domeny, ktore tą autoryzację ma słabszą.
+
+Po dokonaniu edycji pliku, zapisujemy plik (ctrl+o) i wychodzimy (ctrl+x). Na koniec dajemy komendę:
+exit
+aby wyjśc z trybu roota.
+Na tym etapie konfiguracja jest skończona.
+
+*URUCHAMIANIE SKRYPTU*
+Aby skrypt zadziałał, w folderze ze skryptem musi się znajdować plik .txt w którym znajdować się będzie adres email, na który wysyłane będą mejle z parametrami. Aby skrypt zadział poprawnie, adres email powinien byc zapisany w dowolnej linijce, ale sam, bez żadnego tekstu dookoła
+W celu uruchomienia skryptu należy wpisać w linię komend:
+./projekt1.sh mail.txt
+gdzie mail.txt - plik tekstowy z adresem email.
+Skrypt przy każdym uruchomieniu będzie tworzył plik parameters.txt, w którym przechowywane będą odczytywane parametry komputera (za pierwszym uruchomieniem stworzy go, za kolejnych będzie go aktualizował, jeśli jakaś zmienna się zmieniła).
+
+*WYKAZ UŻYTYCH KOMEND*
+hostname -i #wyswietla adres ip
+free -m | grep "Mem" #free daje informacje o swap i RAM pamięci, grep zwraca tylko linijkę, gdzie jest informacja o ram
+echo $RAM | cut -d " " -f3 #pobiera trzecią liczbę od początku w zwróconej wyżej linijce, czyli informację o używanej ilości pamięci RAM
+cat /proc/cpuinfo | grep -c "processor" # pierwsza część wyświetla informację o procesorach, grep zlicza ile razy pojawiło się słowo "processor", co jest równe ilości używanych procesorów
+ssmtp $EMAIL < $PARAMS #wysyła mejla na podany adres o treści stworzonego pliku tekstowego
+head -1 $PARAMS # pobiera pierwszą linijkę pliku z parametrami
+tail -2 $PARAMS | head -1 #pobiera drugą linijkę
+tail -1 $PARAMS #pobiera ostatnią, trzecią linijkę
